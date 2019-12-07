@@ -6,25 +6,21 @@ class GoodReadsSpider(scrapy.Spider):
 
     # request
     def start_requests(self):
-        urls = [
-            'https://www.goodreads.com/quotes?page=1',
-            'https://www.goodreads.com/quotes?page=2',
-            'https://www.goodreads.com/quotes?page=3',
-            'https://www.goodreads.com/quotes?page=4',
-            'https://www.goodreads.com/quotes?page=5',
-            'https://www.goodreads.com/quotes?page=6',
-            'https://www.goodreads.com/quotes?page=7',
-            'https://www.goodreads.com/quotes?page=8',
-            'https://www.goodreads.com/quotes?page=9',
-            'https://www.goodreads.com/quotes?page=10', 
-        ]
-
-        for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse)
+        """
+        This method start the spider with a request to the page or pages
+        """
+        url = 'https://www.goodreads.com/quotes?page=1'
+        
+        yield scrapy.Request(url=url, callback=self.parse)
 
     # response
     def parse(self, response):
-        page_number = response.url.split('=')[1]
-        _file = "{0}.html".format(page_number)
-        with open(_file, 'wb') as f:
-            f.write(response.body)
+        """
+        This method is to extract links and return the requests
+        """
+        for quote in response.selector.xpath("//div[@class='quote']"): # here starts the implementation of xpath
+            yield {
+                'text': quote.xpath(".//div[@class='quoteText']/text()[1]").extract_first(), # extract_first() method extract only the first match and can be replaced with get() 
+                'author': quote.xpath(".//span[@class='authorOrTitle']/text()").extract_first(),
+                'tags': quote.xpath(".//div[@class='greyText smallText left']/a/text()").extract() # extrac() method extract all the matches and can be replaced with getall() 
+            }
